@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent">
+  <LinearLayout android:id="@+id/crime_camera_preview"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <SurfaceView android:id="@+id/crime_camera_surfaceView"
+      android:layout_weight="1"
+      android:layout_width="0dp"
+      android:layout_height="match_parent"/>
+    <Button android:id="@+id/crime_camera_takePictureButton"
+      android:layout_width="wrap_content"
+      android:layout_height="match_parent"
+      android:text="@string/take"/> 
+  </LinearLayout>
+  <FrameLayout android:id="@+id/crime_camera_progressContainer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clickable="true"> <!-- android:clickable="true" you ensure that the FrameLayout will intercept (and do nothing with) any touch events. This prevents the
+					             user from interacting with anything in the LinearLayout and, in particular, from pressing the Take! button again. Page 321 -->
+    <ProgressBar
+      style="@android:style/Widget.ProgressBar.Large"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_gravity="center"/>
+    
+   </FrameLayout>
+</FrameLayout>
+<!-- From: file:/D:/Repositories/Android/JMCriminalIntent/app/src/main/res/layout/fragment_crime_camera.xml -->
