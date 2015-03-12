@@ -15,23 +15,24 @@ public final class R {
         public static final int ic_launcher=0x7f020001;
     }
     public static final class id {
-        public static final int crime_camera_preview=0x7f040007;
-        public static final int crime_camera_progressContainer=0x7f04000a;
-        public static final int crime_camera_surfaceView=0x7f040008;
-        public static final int crime_camera_takePictureButton=0x7f040009;
-        public static final int crime_date=0x7f040005;
-        public static final int crime_imageButton=0x7f040003;
-        public static final int crime_list_item_dateTextView=0x7f04000e;
-        public static final int crime_list_item_solvedCheckBox=0x7f04000c;
-        public static final int crime_list_item_titleTextView=0x7f04000d;
-        public static final int crime_solved=0x7f040006;
-        public static final int crime_title=0x7f040004;
+        public static final int crime_camera_preview=0x7f040008;
+        public static final int crime_camera_progressContainer=0x7f04000b;
+        public static final int crime_camera_surfaceView=0x7f040009;
+        public static final int crime_camera_takePictureButton=0x7f04000a;
+        public static final int crime_date=0x7f040006;
+        public static final int crime_imageButton=0x7f040004;
+        public static final int crime_imageView=0x7f040003;
+        public static final int crime_list_item_dateTextView=0x7f04000f;
+        public static final int crime_list_item_solvedCheckBox=0x7f04000d;
+        public static final int crime_list_item_titleTextView=0x7f04000e;
+        public static final int crime_solved=0x7f040007;
+        public static final int crime_title=0x7f040005;
         public static final int dialog_date_datePicker=0x7f040002;
         public static final int fragmentContainer=0x7f040001;
-        public static final int fragment_crime_create=0x7f04000b;
-        public static final int menu_item_delete_crime=0x7f04000f;
-        public static final int menu_item_new_crime=0x7f040010;
-        public static final int menu_item_show_subtitle=0x7f040011;
+        public static final int fragment_crime_create=0x7f04000c;
+        public static final int menu_item_delete_crime=0x7f040010;
+        public static final int menu_item_new_crime=0x7f040011;
+        public static final int menu_item_show_subtitle=0x7f040012;
         public static final int viewPager=0x7f040000;
     }
     public static final class layout {

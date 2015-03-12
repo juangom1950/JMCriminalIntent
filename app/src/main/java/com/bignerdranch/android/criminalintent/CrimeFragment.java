@@ -1,5 +1,7 @@
 package com.bignerdranch.android.criminalintent;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.UUID;
 
@@ -7,6 +9,7 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -25,26 +28,32 @@ import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
+import android.widget.ImageView;
 
 public class CrimeFragment extends Fragment {
 	
-	 public static final String EXTRA_CRIME_ID = "criminalintent.CRIME_ID";
+	public static final String EXTRA_CRIME_ID = "criminalintent.CRIME_ID";
+    private static final String TAG = "CrimeFragment";
 	 
-	 private static final String DIALOG_DATE = "date";
-	 private static final int REQUEST_DATE = 0;
+	private static final String DIALOG_DATE = "date";
+    private static final String DIALOG_IMAGE = "image";
+	private static final int REQUEST_DATE = 0;
+    private static final int REQUEST_PHOTO = 1;
 	
     Crime mCrime;
     EditText mTitleField;
     Button mDateButton;
     CheckBox mSolvedCheckBox;
     ImageButton mPhotoButton;
+    ImageView mPhotoView;
+    UUID crimeId;
     
     //Android programmers follow a convention of adding a static method named
     //newInstance() to the Fragment class. This method creates the fragment instance and bundles up and
     //sets its arguments.
     //When the hosting activity needs an instance of that fragment, you have it call the newInstance()
     //method rather than calling the constructor directly. The activity can pass in any required parameters to
-    //newInstance(…) that the fragment needs to create its arguments. Page 195
+    //newInstance(ï¿½) that the fragment needs to create its arguments. Page 195
     public static CrimeFragment newInstance(UUID crimeId) {
     	
         Bundle args = new Bundle();
@@ -65,9 +74,10 @@ public class CrimeFragment extends Fragment {
        //UUID crimeId = (UUID)getActivity().getIntent().getSerializableExtra(EXTRA_CRIME_ID);
         
         //Here you retrieve the arguments that were set in the static method newInstance(UUID crimeId)
-        UUID crimeId = (UUID)getArguments().getSerializable(EXTRA_CRIME_ID);
+        //UUID crimeId = (UUID)getArguments().getSerializable(EXTRA_CRIME_ID);
+        crimeId = (UUID)getArguments().getSerializable(EXTRA_CRIME_ID);
         
-        //The CrimeLab.get(…) method requires a Context object, so CrimeFragment passes the CrimeActivity. Page 193
+        //The CrimeLab.get(ï¿½) method requires a Context object, so CrimeFragment passes the CrimeActivity. Page 193
         mCrime = CrimeLab.get(getActivity()).getCrime(crimeId);
         
        /* 1* Responding to the Up button 
@@ -77,9 +87,9 @@ public class CrimeFragment extends Fragment {
         
     }
     
-    //The code that sets the button’s text is identical to code you call in onCreateView(…). To avoid setting
+    //The code that sets the buttonï¿½s text is identical to code you call in onCreateView(ï¿½). To avoid setting
     //the text in two places, encapsulate this code in a private updateDate() method and then call it in
-    //onCreateView(…) and onActivityResult(…). Page 223
+    //onCreateView(ï¿½) and onActivityResult(ï¿½). Page 223
     public void updateDate() {
         mDateButton.setText(mCrime.getDate().toString());
     }
@@ -91,7 +101,7 @@ public class CrimeFragment extends Fragment {
     	
         View v = inflater.inflate(R.layout.fragment_crime, parent, false);
         
-       /* 1* To enable the app icon to work as a button and get the caret to appear in the fragment’s view, you must
+       /* 1* To enable the app icon to work as a button and get the caret to appear in the fragmentï¿½s view, you must
     	 set a property on the fragment by calling the following method: .setDisplayHomeAsUpEnabled(true);
          This method is from API level 11, so you need to wrap it to keep the app Froyo- and Gingerbread-safe
          and annotate the method to wave off Android Lint, that's why you need to add @TargetApi(11) */ 
@@ -160,9 +170,29 @@ public class CrimeFragment extends Fragment {
             public void onClick(View v) {
                 // launch the camera activity
                 Intent i = new Intent(getActivity(), CrimeCameraActivity.class);
-                startActivity(i);
+                i.putExtra("EXTRA_CRIME_ID", crimeId.toString());
+                //startActivity(i);
+                startActivityForResult(i, REQUEST_PHOTO ); //Page 326
             }
         });
+
+        mPhotoView = (ImageView)v.findViewById(R.id.crime_imageView); //Page 334
+        mPhotoView.setOnClickListener(new View.OnClickListener() {
+                public  void onClick(View v){
+                    Photo p = mCrime.getPhoto();
+                    if (p == null)
+                        return;
+                    FragmentManager fm = getActivity().getSupportFragmentManager();
+
+                    String path = getActivity().getFileStreamPath(p.getFilename()).getAbsolutePath();
+
+                    /*Within its implementation, create an instance of ImageFragment and add it to
+                    CrimePagerActivityâ€™s FragmentManager by calling show(â€¦) on the ImageFragment. Page 340*/
+                    ImageFragment.createInstance(path).show(fm, DIALOG_IMAGE);
+
+                }
+        });
+
         
         //Check if camera is not available in this devise, disable camera functionality. Page 
         PackageManager pm = getActivity().getPackageManager();
@@ -173,15 +203,79 @@ public class CrimeFragment extends Fragment {
         
         return v; 
     }
+
+    //Page 336
+    private void showPhoto() {
+        // (Re)set the image button's image based on our photo
+        Photo p = mCrime.getPhoto();
+        BitmapDrawable b = null;
+        if (p != null) {
+            String path = getActivity().getFileStreamPath(p.getFilename()).getAbsolutePath();
+            b = PictureUtils.getScaledDrawable(getActivity(), path);
+            //Log.i(TAG, "Path: " + path);
+        }
+        mPhotoView.setImageDrawable(b);
+    }
+
+    //Loading images in onStart() and unloading them in onStop() is a good practice. Page 338
+    //Do this to have the photo ready as soon as CrimeFragment's view becomes visible to the user.
+    @Override
+    public void onStart() {
+        super.onStart();
+        showPhoto();
+    }
+
+    //It is better to load images as soon as your activity is visible and wait to unload
+    //them until you know that your activity can no longer be seen. Page 338
+    @Override
+    public void onStop() {
+        super.onStop();
+        //Very important to clean memory space. Page 337
+        PictureUtils.cleanImageView(mPhotoView);
+    }
+
+
+    public String getfileExt(File fileName) {
+        String ext = "";
+        int i = fileName.toString().lastIndexOf('.');
+        if (i > 0) {
+            ext = fileName.toString().substring(i+1);
+        }
+        return ext;
+    }
+
+    public ArrayList<File> deleteJPG(String directoryName, ArrayList<File> files) {
+        File directory = new File(directoryName);
+
+        // get all the files from a directory
+        File[] fList = directory.listFiles();
+        for (File file : fList) {
+            if (file.isFile()) {
+                //files.add(file);
+                String fileExt = getfileExt(file);
+                if(fileExt.equalsIgnoreCase("jpg")){
+                    file.delete();
+                }
+            }else if (file.isDirectory()) {
+                deleteJPG(file.getAbsolutePath(), files);
+            }
+        }
+        return files;
+    }
     
     //4) Responding to the dialog
-    //In CrimeFragment, override onActivityResult(…) to retrieve the extra, set the date on the Crime, and
+    //In CrimeFragment, override onActivityResult(ï¿½) to retrieve the extra, set the date on the Crime, and
     //refresh the text of the date button. Page 223
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
     	
         if (resultCode != Activity.RESULT_OK) return;
-        
+        //Log.i("TAG", "I am here 1");
+
+        /*String path = "/data/data/com.bignerdranch.android.criminalintent/files";
+        ArrayList<File> filesArray = new ArrayList<File>();
+        ArrayList<File> files = deleteJPG(path, filesArray);*/
+
         if (requestCode == REQUEST_DATE) {
         	
             Date date = (Date)data.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
@@ -189,7 +283,21 @@ public class CrimeFragment extends Fragment {
             updateDate(); //Page 223
             //mDateButton.setText(mCrime.getDate().toString());
             //updateDate();
+        }else if (requestCode == REQUEST_PHOTO) {
+            // Create a new Photo object and attach it to the crime
+            String filename = data
+                    .getStringExtra(CrimeCameraFragment.EXTRA_PHOTO_FILENAME);
+            if (filename != null) {
+               Log.i(TAG, "filename: " + filename);
+                Photo p = new Photo(filename);
+                mCrime.setPhoto(p);
+                //Call this method to ensure that the image will be visible when the user returns from CrimeCameraActivity. Pag 336
+                showPhoto();
+                //Log.i(TAG, "Crime: " + mCrime.getTitle() + " has a photo");
+
+            }
         }
+
     }
 
     // 1*
@@ -217,6 +325,7 @@ public class CrimeFragment extends Fragment {
     public void onPause() {
         super.onPause();
         Log.d("TAG", "CrimeFragment Pause");
+        Log.i("TAG", "filename: ");
         CrimeLab.get(getActivity()).saveCrimes();
     }
     

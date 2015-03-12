@@ -69,6 +69,8 @@ public class CriminalIntentJSONSerializer {
 			Writer writer = null;
 			
 			try {
+                //Open a private file associated with this Context's application package for writing. Creates the file if it doesn't already exist.
+                //ref: http://developer.android.com/reference/android/content/Context.html#openFileOutput(java.lang.String, int)
 				OutputStream out = mContext
 					.openFileOutput(mFilename, Context.MODE_PRIVATE);
 				writer = new OutputStreamWriter(out);

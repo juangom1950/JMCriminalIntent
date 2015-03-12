@@ -27,6 +27,7 @@ import android.widget.TextView;
 import android.widget.AbsListView.MultiChoiceModeListener;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 
+//ListFragment, ListView, and ArrayAdapter. Page 178
 public class CrimeListFragment extends ListFragment {
 	
 	private static final String TAG = "CrimeListFragment";
@@ -40,19 +41,20 @@ public class CrimeListFragment extends ListFragment {
         super.onCreate(savedInstanceState);
         
         /*The FragmentManager is responsible for calling Fragment.onCreateOptionsMenu(Menu,
-		MenuInflater) when the activity receives its onCreateOptionsMenu(…) callback from the
-		OS. You must explicitly tell the FragmentManager that your fragment should receive a call to onCreateOptionsMenu(…). Page 258*/
+		MenuInflater) when the activity receives its onCreateOptionsMenu(ï¿½) callback from the
+		OS. You must explicitly tell the FragmentManager that your fragment should receive a call to onCreateOptionsMenu(ï¿½). Page 258*/
         setHasOptionsMenu(true);
         
         //getActivity() It gives you the Context object within a fragment. Ref: developer.android.com/guide/components/fragments.html
         getActivity().setTitle(R.string.crimes_title);
         mCrimes = CrimeLab.get(getActivity()).getCrimes();
-        
+
+        //Adapter explanation Page 179
         CrimeAdapter adapter = new CrimeAdapter(mCrimes);
         setListAdapter(adapter);
         
-        //Manage rotation. Add a boolean member variable and, in onCreate(…), retain
-        //CrimeListFragment and initialize the variable.
+        //Manage rotation. Add a boolean member variable and, in onCreate(ï¿½), retain
+        //CrimeListFragment and initialize the variable. Page 168
         setRetainInstance(true); //Control whether a fragment instance is retained across Activity re-creation (such as from a configuration change).
         mSubtitleVisible = false;
         
@@ -76,7 +78,7 @@ public class CrimeListFragment extends ListFragment {
         //Log.d("Regist", "I am before if Statement");
         
         //2) Registering for the context menu. Page 285
-        //The android.R.id.list resource ID is used to retrieve the ListView managed by ListFragment within onCreateView(…).      
+        //The android.R.id.list resource ID is used to retrieve the ListView managed by ListFragment within onCreateView(ï¿½).      
         ListView listView = (ListView)v.findViewById(android.R.id.list);
         
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
@@ -88,7 +90,7 @@ public class CrimeListFragment extends ListFragment {
         	listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
         	
         	/*This interface contains the following method that calls back when a view has been selected or deselected.		
-        	 * MultiChoiceModeListener implements another interface – ActionMode.Callback. When the screen
+        	 * MultiChoiceModeListener implements another interface ï¿½ ActionMode.Callback. When the screen
         	is put into contextual action mode, an instance of the ActionMode class is created, and the methods in
         	ActionMode.Callback call back at different points in the lifecycle of the ActionMode. There are four
         	required methods in ActionMode.Callback: onCreateActionMode(..), onPrepareActionMode(..), onActionItemClicked(), onDestroyActionMode() Page 289*/
@@ -109,7 +111,7 @@ public class CrimeListFragment extends ListFragment {
                 	// Required, but not used in this implementation
                 }
                 
-                //called after onCreateActionMode(…) and whenever an existing contextual action bar needs to be
+                //called after onCreateActionMode(ï¿½) and whenever an existing contextual action bar needs to be
                 //refreshed with new data.
                 public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
                     return false;
@@ -159,7 +161,8 @@ public class CrimeListFragment extends ListFragment {
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) { 
-    	
+
+        //getListAdapter() Get the ListAdapter associated with this activity's ListView.
         Crime c = (Crime)(getListAdapter()).getItem(position);
         //Log.d(TAG, c.getTitle() + " was clicked");
         
@@ -176,7 +179,7 @@ public class CrimeListFragment extends ListFragment {
         //The fragment can access the Activity instance with getActivity() and easily perform tasks
         Intent i = new Intent(getActivity(), CrimePagerActivity.class); //**Important **
         
-        //After creating an explicit intent, you call putExtra(…) and pass in a string key and the value to pair
+        //After creating an explicit intent, you call putExtra(ï¿½) and pass in a string key and the value to pair
         //with it (the mCrimeId). In this case, you are calling putExtra(String, Serializable) because UUID
         //is a serializable object. Page 193
         i.putExtra(CrimeFragment.EXTRA_CRIME_ID, c.getId());
@@ -185,20 +188,28 @@ public class CrimeListFragment extends ListFragment {
     }
 
     private void showCreateCrime() {
+
 		Crime crime = new Crime();
 		CrimeLab.get(getActivity()).addCrime(crime);
+
 		Intent i = new Intent(getActivity(), CrimePagerActivity.class);
 		i.putExtra(CrimeFragment.EXTRA_CRIME_ID, crime.getId());
 		startActivityForResult(i, 0);
 	}
     
 	//In CrimeListFragment.java, create a subclass of ArrayAdapter as an inner class of CrimeListFragment.
+    //You are going to use an instance of ArrayAdapter<T>, which is an adapter that knows how to work with data in an array (or an ArrayList) of T type objects.
+    //When the ListView needs a view object to display, it will have a conversation with its adapter
+    /*The adapter is responsible for
+    â€¢ creating the necessary view object
+    â€¢ populating it with data from the model layer
+    â€¢ returning the view object to the ListView.  Page 179  */
     private class CrimeAdapter extends ArrayAdapter<Crime> {
     	
         public CrimeAdapter(ArrayList<Crime> crimes) {
         	
         	/*
-        	 * The layout that you specify in the adapter’s constructor (android.R.layout.simple_list_item_1) is
+        	 * The layout that you specify in the adapterï¿½s constructor (android.R.layout.simple_list_item_1) is
 				a pre-defined layout from the resources provided by the Android SDK. This layout has a TextView as
 				its root element. Page 181
 				//super(getActivity(), android.R.layout.simple_list_item_1, crimes);
@@ -212,24 +223,27 @@ public class CrimeListFragment extends ListFragment {
         //getView() method in Adapter is for generating item's view of a ListView
         //The place to create and return a custom list item is the ArrayAdapter<T> method:
         //	public View getView(int position, View convertView, ViewGroup parent)
-        //In this implementation of getView(…), you first check to see if a recycled view was passed in. If not,
-    	//you inflate one from the custom layout. Page 188
+        /*Within its implementation of getView(â€¦), the adapter creates a view object from the correct item in the
+        array list and returns that view object to the ListView. The ListView then adds the view object to itself
+        as a child view, which gets the new view on screen. Page 180*/
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
         	
             // if we weren't given a view, inflate one
         	//The convertView parameter is an existing list item that the adapter can reconfigure and return instead of creating a brand new object. Page 187
+            //In this implementation of getView(ï¿½), you first check to see if a recycled view was passed in. If not,
+            //you inflate one from the custom layout. Page 188
             if (convertView == null ) {
                 convertView = getActivity().getLayoutInflater().inflate(R.layout.list_item_crime, null);                   
             }
 
             // configure the view for this Crime
-            //you call Adapter’s getItem(int)  method to get the Crime for the current position in the list.
+            //you call Adapterï¿½s getItem(int)  method to get the Crime for the current position in the list.
             Crime c = getItem(position);
 
             /*
              After you have the correct Crime, you get a reference to each widget in the view object and configure it
-			 with the Crime’s data. Page 188
+			 with the Crimeï¿½s data. Page 188
              */
             TextView titleTextView = (TextView)convertView.findViewById(R.id.crime_list_item_titleTextView);
             titleTextView.setText(c.getTitle());
@@ -245,7 +259,7 @@ public class CrimeListFragment extends ListFragment {
         }
     }
     
-    //The list view’s adapter needs to be informed that the data set has changed (or may have changed) so
+    //The list viewï¿½s adapter needs to be informed that the data set has changed (or may have changed) so
     //that it can refetch the data and reload the list. Page 197
     @Override
 	public void onResume() {
@@ -260,7 +274,7 @@ public class CrimeListFragment extends ListFragment {
     	super.onCreateOptionsMenu(menu, inflater);
     	inflater.inflate(R.menu.fragment_crime_list, menu);
     	
-    	//You also need to check the subtitle’s state in onCreateOptionsMenu(…) to make sure you are
+    	//You also need to check the subtitleï¿½s state in onCreateOptionsMenu(ï¿½) to make sure you are
     	//displaying the correct menu item title. Page 270
     	MenuItem showSubtitle = menu.findItem(R.id.menu_item_show_subtitle);
     	
@@ -338,6 +352,6 @@ public class CrimeListFragment extends ListFragment {
 
  * However, because you have a CheckBox in your list item, there is one more change to make. A CheckBox is focusable by default. This
    means that a click on a list item will be interpreted as toggling the CheckBox and will not reach your
-   onListItemClick(…) method. You need to update list_item_crime.xml to define the CheckBox as not focusable.
+   onListItemClick(ï¿½) method. You need to update list_item_crime.xml to define the CheckBox as not focusable.
  */
 

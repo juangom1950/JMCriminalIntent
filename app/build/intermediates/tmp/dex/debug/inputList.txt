@@ -1,0 +1,4 @@
+D:\Repositories\Android\JMCriminalIntent\app\build\intermediates\classes\debug
+D:\Repositories\Android\JMCriminalIntent\app\build\intermediates\pre-dexed\debug\support-annotations-21.0.3-3dcd9d0d913c2eac24ab22f88a8770cb2947917d.jar
+D:\Repositories\Android\JMCriminalIntent\app\build\intermediates\pre-dexed\debug\internal_impl-21.0.3-e01d821ceea6dc219f25ede68b83709238492950.jar
+D:\Repositories\Android\JMCriminalIntent\app\build\intermediates\pre-dexed\debug\classes-f710a663ea13422c9842effe0cb83ef80b24a0ca.jar
