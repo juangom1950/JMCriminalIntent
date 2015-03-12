@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- From: file:/D:/Repositories/Android/JMCriminalIntent/app/src/main/res/values/ids.xml -->
+    <!-- From: file:/D:/Repositories/Android/JMCriminalIntent1/app/src/main/res/values/ids.xml -->
     <eat-comment/>
     <item name="viewPager" type="id"/>
-    <!-- From: file:/D:/Repositories/Android/JMCriminalIntent/app/src/main/res/values/strings.xml -->
+    <!-- From: file:/D:/Repositories/Android/JMCriminalIntent1/app/src/main/res/values/strings.xml -->
     <eat-comment/>
     <string name="app_name">CriminalIntent</string>
     <string name="crime_details_label">Details</string>
@@ -19,7 +19,7 @@
     <string name="show_subtitle">Show Subtitle</string>
     <string name="subtitle">Sometimes tolerance is not a virtue.</string>
     <string name="take">Take!</string>
-    <!-- From: file:/D:/Repositories/Android/JMCriminalIntent/app/src/main/res/values/styles.xml -->
+    <!-- From: file:/D:/Repositories/Android/JMCriminalIntent1/app/src/main/res/values/styles.xml -->
     <eat-comment/>
     <style name="AppTheme" parent="android:Theme.Light"/>
 </resources>
