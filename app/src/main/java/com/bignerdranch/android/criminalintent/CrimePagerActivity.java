@@ -11,7 +11,7 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 
 public class CrimePagerActivity extends FragmentActivity {
-	
+
 	private ViewPager mViewPager;
 	private ArrayList<Crime> mCrimes;
 
@@ -53,7 +53,7 @@ public class CrimePagerActivity extends FragmentActivity {
         });
         
         /* Press Back to return to the list of crimes and press a different item. You will see the first crime displayed again instead of the crime that you asked for.
-        By default, the ViewPager shows the first item in its PagerAdapter. You can have it show the crime that was selected by setting the ViewPager’s 
+        By default, the ViewPager shows the first item in its PagerAdapter. You can have it show the crime that was selected by setting the ViewPagerï¿½s 
         current item to the index of the selected crime. Page 206
         Intent explanation page 100*/
         UUID crimeId = (UUID)getIntent().getSerializableExtra(CrimeFragment.EXTRA_CRIME_ID);
@@ -64,7 +64,7 @@ public class CrimePagerActivity extends FragmentActivity {
             } 
         }
         
-        //Here you replace the activity’s title that appears on the action bar
+        //Here you replace the activityï¿½s title that appears on the action bar
         //(or the title bar on older devices) with the title of the current Crime. Page 207
         mViewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
         	
