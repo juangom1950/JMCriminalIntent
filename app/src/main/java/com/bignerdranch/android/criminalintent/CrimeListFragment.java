@@ -268,6 +268,9 @@ public class CrimeListFragment extends ListFragment {
 	}
     
     //Add menu to the page. You need to add "setHasOptionsMenu(true);" in onCreate(Bundle savedInstanceState) method
+    /*The  methods for creating the options menu and responding to the selection of a menu item are
+       * public void onCreateOptionsMenu(Menu menu, MenuInflater inflater)
+       * public boolean onOptionsItemSelected(MenuItem item)  Page 257*/
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
     	

@@ -80,7 +80,7 @@ public class CrimeFragment extends Fragment {
         //The CrimeLab.get(�) method requires a Context object, so CrimeFragment passes the CrimeActivity. Page 193
         mCrime = CrimeLab.get(getActivity()).getCrime(crimeId);
         
-       /* 1* Responding to the Up button 
+       /* 2* Up button.  Responding to the Up button
         * So the first thing to do is to tell the FragmentManager
         that CrimeFragment will be implementing options menu callbacks on behalf of the activity. Page 264*/
         setHasOptionsMenu(true);
@@ -94,19 +94,20 @@ public class CrimeFragment extends Fragment {
         mDateButton.setText(mCrime.getDate().toString());
     }
 
-    //Fragment life cycle http://developer.android.com/guide/components/fragments.html
+     //Fragment life cycle http://developer.android.com/guide/components/fragments.html
     @TargetApi(11) //*1  //If you remove the annotation, lint uses the manifest min SDK API level setting instead when checking the code. Source http://stackoverflow.com/questions/24798481/android-target-api
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
     	
         View v = inflater.inflate(R.layout.fragment_crime, parent, false);
         
-       /* 1* To enable the app icon to work as a button and get the caret to appear in the fragment�s view, you must
+       /* 1* This is the "Up button" Page 262. To enable the app icon to work as a button and get the caret to appear in the fragment�s view, you must
     	 set a property on the fragment by calling the following method: .setDisplayHomeAsUpEnabled(true);
          This method is from API level 11, so you need to wrap it to keep the app Froyo- and Gingerbread-safe
          and annotate the method to wave off Android Lint, that's why you need to add @TargetApi(11) */ 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-        	
+
+            //4* Up button Page 264-266
         	//Be sure to add this in the manifest first  <meta-data android:name="android.support.PARENT_ACTIVITY" android:value=".CrimeListActivity"/>
         	if (NavUtils.getParentActivityName(getActivity()) != null) {
         		getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
@@ -235,7 +236,7 @@ public class CrimeFragment extends Fragment {
     }
 
 
-    public String getfileExt(File fileName) {
+    /*public String getfileExt(File fileName) {
         String ext = "";
         int i = fileName.toString().lastIndexOf('.');
         if (i > 0) {
@@ -261,7 +262,7 @@ public class CrimeFragment extends Fragment {
             }
         }
         return files;
-    }
+    }*/
     
     //4) Responding to the dialog
     //In CrimeFragment, override onActivityResult(�) to retrieve the extra, set the date on the Crime, and
@@ -305,6 +306,7 @@ public class CrimeFragment extends Fragment {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		
 		switch (item.getItemId()) {
+            //3* Up button responding to this button.
 			/*You do not need to define or inflate the app icon menu item in an XML file. It comes
 			with a ready-made resource ID: android.R.id.home. Page 264*/
 			case android.R.id.home:
