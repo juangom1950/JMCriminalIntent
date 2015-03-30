@@ -9,14 +9,18 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NavUtils;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -39,15 +43,20 @@ public class CrimeFragment extends Fragment {
     private static final String DIALOG_IMAGE = "image";
 	private static final int REQUEST_DATE = 0;
     private static final int REQUEST_PHOTO = 1;
-	
-    Crime mCrime;
-    EditText mTitleField;
-    Button mDateButton;
-    CheckBox mSolvedCheckBox;
-    ImageButton mPhotoButton;
-    ImageView mPhotoView;
-    UUID crimeId;
-    
+    private static final int REQUEST_CONTACT = 2;
+
+    private Crime mCrime;
+    private EditText mTitleField;
+    private Button mDateButton;
+    private CheckBox mSolvedCheckBox;
+    private ImageButton mPhotoButton;
+    private Button mSuspectButton;
+    private ImageView mPhotoView;
+    private UUID crimeId;
+    private Uri contactUri;
+    private String phNumber;
+    private Button mDialPhNumber;
+
     //Android programmers follow a convention of adding a static method named
     //newInstance() to the Fragment class. This method creates the fragment instance and bundles up and
     //sets its arguments.
@@ -80,7 +89,7 @@ public class CrimeFragment extends Fragment {
         //The CrimeLab.get(�) method requires a Context object, so CrimeFragment passes the CrimeActivity. Page 193
         mCrime = CrimeLab.get(getActivity()).getCrime(crimeId);
         
-       /* 1* Responding to the Up button 
+       /* 2* Up button.  Responding to the Up button
         * So the first thing to do is to tell the FragmentManager
         that CrimeFragment will be implementing options menu callbacks on behalf of the activity. Page 264*/
         setHasOptionsMenu(true);
@@ -94,19 +103,20 @@ public class CrimeFragment extends Fragment {
         mDateButton.setText(mCrime.getDate().toString());
     }
 
-    //Fragment life cycle http://developer.android.com/guide/components/fragments.html
+     //Fragment life cycle http://developer.android.com/guide/components/fragments.html
     @TargetApi(11) //*1  //If you remove the annotation, lint uses the manifest min SDK API level setting instead when checking the code. Source http://stackoverflow.com/questions/24798481/android-target-api
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
     	
         View v = inflater.inflate(R.layout.fragment_crime, parent, false);
         
-       /* 1* To enable the app icon to work as a button and get the caret to appear in the fragment�s view, you must
+       /* 1* This is the "Up button" Page 262. To enable the app icon to work as a button and get the caret to appear in the fragment�s view, you must
     	 set a property on the fragment by calling the following method: .setDisplayHomeAsUpEnabled(true);
          This method is from API level 11, so you need to wrap it to keep the app Froyo- and Gingerbread-safe
          and annotate the method to wave off Android Lint, that's why you need to add @TargetApi(11) */ 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-        	
+
+            //4* Up button Page 264-266
         	//Be sure to add this in the manifest first  <meta-data android:name="android.support.PARENT_ACTIVITY" android:value=".CrimeListActivity"/>
         	if (NavUtils.getParentActivityName(getActivity()) != null) {
         		getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
@@ -193,6 +203,44 @@ public class CrimeFragment extends Fragment {
                 }
         });
 
+        /*Because you started the activity for a result with ACTION_PICK, you will receive an intent via
+            onActivityResult(…).*/
+        mSuspectButton = (Button)v.findViewById(R.id.crime_suspectButton);
+        mSuspectButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // CONTENT_URI: is your content provider URI for other applications to access data from it.
+                Intent i = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
+                startActivityForResult(i, REQUEST_CONTACT);
+            }
+        });
+        if (mCrime.getSuspect() != null) {
+            mSuspectButton.setText(mCrime.getSuspect());
+        }
+
+        //Create here button with implicit intent to make call
+        mDialPhNumber = (Button)v.findViewById(R.id.crime_phNumbButton);
+        mDialPhNumber.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                //phNumber = (EditText) findViewById(R.id.phNumber);
+                Intent implicit = new Intent(Intent.ACTION_DIAL,
+                        Uri.parse("tel:" + phNumber));
+                startActivity(implicit);
+            }
+        });
+
+        //Page 351
+        Button reportButton = (Button)v.findViewById(R.id.crime_reportButton);
+        reportButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent i = new Intent(Intent.ACTION_SEND);
+                i.setType("text/plain");
+                i.putExtra(Intent.EXTRA_TEXT, getCrimeReport());
+                i.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.crime_report_subject));
+                i = Intent.createChooser(i, getString(R.string.send_report));
+                startActivity(i);
+            }
+        });
+
         
         //Check if camera is not available in this devise, disable camera functionality. Page 
         PackageManager pm = getActivity().getPackageManager();
@@ -217,6 +265,33 @@ public class CrimeFragment extends Fragment {
         mPhotoView.setImageDrawable(b);
     }
 
+    //Page 349
+    private String getCrimeReport() {
+
+        String solvedString = null;
+
+        if (mCrime.isSolved()) {
+            solvedString = getString(R.string.crime_report_solved);
+        } else {
+            solvedString = getString(R.string.crime_report_unsolved);
+        }
+
+        String dateFormat = "EEE, MMM dd";
+        String dateString = DateFormat.format(dateFormat, mCrime.getDate()).toString();
+        String suspect = mCrime.getSuspect();
+
+        if (suspect == null) {
+            suspect = getString(R.string.crime_report_no_suspect);
+        } else {
+            suspect = getString(R.string.crime_report_suspect, suspect);
+        }
+
+        String report = getString(R.string.crime_report,
+                mCrime.getTitle(), dateString, solvedString, suspect);
+
+        return report;
+    }
+
     //Loading images in onStart() and unloading them in onStop() is a good practice. Page 338
     //Do this to have the photo ready as soon as CrimeFragment's view becomes visible to the user.
     @Override
@@ -235,7 +310,7 @@ public class CrimeFragment extends Fragment {
     }
 
 
-    public String getfileExt(File fileName) {
+    /*public String getfileExt(File fileName) {
         String ext = "";
         int i = fileName.toString().lastIndexOf('.');
         if (i > 0) {
@@ -261,7 +336,7 @@ public class CrimeFragment extends Fragment {
             }
         }
         return files;
-    }
+    }*/
     
     //4) Responding to the dialog
     //In CrimeFragment, override onActivityResult(�) to retrieve the extra, set the date on the Crime, and
@@ -296,15 +371,84 @@ public class CrimeFragment extends Fragment {
                 //Log.i(TAG, "Crime: " + mCrime.getTitle() + " has a photo");
 
             }
+        }else if (requestCode == REQUEST_CONTACT) {
+            contactUri = data.getData();
+            // Specify which fields you want your query to return
+            // values for.
+            String[] queryFields = new String[] {
+                    ContactsContract.Contacts.DISPLAY_NAME
+            };
+            // Perform your query - the contactUri is like a "where"
+            // clause here
+            Cursor c = getActivity().getContentResolver()
+                    .query(contactUri, queryFields, null, null, null);
+            // Double-check that you actually got results
+            if (c.getCount() == 0) {
+                c.close();
+                return;
+            }
+            // Pull out the first column of the first row of data -
+            // that is your suspect's name.
+            c.moveToFirst();
+            String suspect = c.getString(0);
+            mCrime.setSuspect(suspect);
+            mSuspectButton.setText(suspect);
+            c.close();
+
+            //Article https://gist.github.com/evandrix/7058235. Get contact details
+            retrieveContactNumber();
         }
 
     }
+
+    private void retrieveContactNumber() {
+        String contactNumber = null;
+        String contactID = "";
+
+        // getting contacts ID
+        Cursor cursorID = getActivity().getContentResolver().query(contactUri,
+                new String[]{ContactsContract.Contacts._ID},
+                null, null, null);
+
+        if (cursorID.moveToFirst()) {
+
+            contactID = cursorID.getString(cursorID.getColumnIndex(ContactsContract.Contacts._ID));
+            String testing = "";
+        }
+
+        cursorID.close();
+
+        Log.d(TAG, "Contact ID: " + contactID);
+
+        // Using the contact ID now we will get contact phone number
+        Cursor cursorPhone = getActivity().getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER},
+
+                ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ? AND " +
+                        ContactsContract.CommonDataKinds.Phone.TYPE + " = " +
+                        ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
+
+                new String[]{contactID},
+                null);
+
+        if (cursorPhone.moveToFirst()) {
+            contactNumber = cursorPhone.getString(cursorPhone.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+        }
+
+        cursorPhone.close();
+
+        phNumber = contactNumber;
+
+        Log.d(TAG, "Contact Phone Number: " + contactNumber);
+    }
+
 
     // 1*
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		
 		switch (item.getItemId()) {
+            //3* Up button responding to this button.
 			/*You do not need to define or inflate the app icon menu item in an XML file. It comes
 			with a ready-made resource ID: android.R.id.home. Page 264*/
 			case android.R.id.home:

@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="match_parent"
   android:layout_height="wrap_content"
-  android:background="@drawable/background_activated"> <!-- Add click background in the list. Page 292-->
+  android:background="@drawable/background_activated"> <!-- Add clickable dark background in the list when it is in "contextual action mode". Page 292-->
   
   <CheckBox android:id="@+id/crime_list_item_solvedCheckBox"
     android:layout_width="wrap_content"
