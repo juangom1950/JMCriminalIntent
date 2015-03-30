@@ -77,15 +77,21 @@ public class CrimeListFragment extends ListFragment {
         
         //Log.d("Regist", "I am before if Statement");
         
-        //2) Registering for the context menu. Page 285
+        //2) Registering for the context menu. Here you do the delete button. Page 285
         //The android.R.id.list resource ID is used to retrieve the ListView managed by ListFragment within onCreateView(�).      
         ListView listView = (ListView)v.findViewById(android.R.id.list);
-        
+
+        //Implementing a "contextual action bar" requires a different set of code from a "floating context menu".
+        //In addition, the contextual action bar code contains classes and methods that are not available on Froyo or
+        //Gingerbread, so you must ensure that the code that you write will not be called where it does not exist.Page  288
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-        	
+           /* By default, a long-press on a view does not trigger the creation of a context menu. You must register a
+               view for a floating context menu by calling the following Fragment method and passing in the view in question.
+               You can register the ListView, which automatically registers the list items.*/
             registerForContextMenu(listView);
         } else {
-        	
+
+            //Here you implement a "contextual action bar". It is the bar that appear at the top when you press and hold an item in the list.
         	// Use contextual action bar on Honeycomb and higher
         	listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
         	
@@ -133,7 +139,7 @@ public class CrimeListFragment extends ListFragment {
                             }
                             mode.finish(); //The call to ActionMode.finish() prepares the action mode to be destroyed. 
                             adapter.notifyDataSetChanged();
-                            return true;
+                            return true;  //Be sure to change it to true; returning false will abort the creation of your action mode
                         default:
                             return false;
                     }
@@ -142,7 +148,7 @@ public class CrimeListFragment extends ListFragment {
                 //called when the ActionMode is about to be destroyed because the user has canceled the action
                 //mode or the selected action has been responded to.
                 public void onDestroyActionMode(ActionMode mode) {
-
+                    // Required, but not used in this implementation
                 }
             });
         }

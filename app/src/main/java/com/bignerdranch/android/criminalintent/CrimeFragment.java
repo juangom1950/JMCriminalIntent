@@ -9,14 +9,18 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NavUtils;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -39,15 +43,20 @@ public class CrimeFragment extends Fragment {
     private static final String DIALOG_IMAGE = "image";
 	private static final int REQUEST_DATE = 0;
     private static final int REQUEST_PHOTO = 1;
-	
-    Crime mCrime;
-    EditText mTitleField;
-    Button mDateButton;
-    CheckBox mSolvedCheckBox;
-    ImageButton mPhotoButton;
-    ImageView mPhotoView;
-    UUID crimeId;
-    
+    private static final int REQUEST_CONTACT = 2;
+
+    private Crime mCrime;
+    private EditText mTitleField;
+    private Button mDateButton;
+    private CheckBox mSolvedCheckBox;
+    private ImageButton mPhotoButton;
+    private Button mSuspectButton;
+    private ImageView mPhotoView;
+    private UUID crimeId;
+    private Uri contactUri;
+    private String phNumber;
+    private Button mDialPhNumber;
+
     //Android programmers follow a convention of adding a static method named
     //newInstance() to the Fragment class. This method creates the fragment instance and bundles up and
     //sets its arguments.
@@ -194,6 +203,44 @@ public class CrimeFragment extends Fragment {
                 }
         });
 
+        /*Because you started the activity for a result with ACTION_PICK, you will receive an intent via
+            onActivityResult(…).*/
+        mSuspectButton = (Button)v.findViewById(R.id.crime_suspectButton);
+        mSuspectButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // CONTENT_URI: is your content provider URI for other applications to access data from it.
+                Intent i = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
+                startActivityForResult(i, REQUEST_CONTACT);
+            }
+        });
+        if (mCrime.getSuspect() != null) {
+            mSuspectButton.setText(mCrime.getSuspect());
+        }
+
+        //Create here button with implicit intent to make call
+        mDialPhNumber = (Button)v.findViewById(R.id.crime_phNumbButton);
+        mDialPhNumber.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                //phNumber = (EditText) findViewById(R.id.phNumber);
+                Intent implicit = new Intent(Intent.ACTION_DIAL,
+                        Uri.parse("tel:" + phNumber));
+                startActivity(implicit);
+            }
+        });
+
+        //Page 351
+        Button reportButton = (Button)v.findViewById(R.id.crime_reportButton);
+        reportButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent i = new Intent(Intent.ACTION_SEND);
+                i.setType("text/plain");
+                i.putExtra(Intent.EXTRA_TEXT, getCrimeReport());
+                i.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.crime_report_subject));
+                i = Intent.createChooser(i, getString(R.string.send_report));
+                startActivity(i);
+            }
+        });
+
         
         //Check if camera is not available in this devise, disable camera functionality. Page 
         PackageManager pm = getActivity().getPackageManager();
@@ -216,6 +263,33 @@ public class CrimeFragment extends Fragment {
             //Log.i(TAG, "Path: " + path);
         }
         mPhotoView.setImageDrawable(b);
+    }
+
+    //Page 349
+    private String getCrimeReport() {
+
+        String solvedString = null;
+
+        if (mCrime.isSolved()) {
+            solvedString = getString(R.string.crime_report_solved);
+        } else {
+            solvedString = getString(R.string.crime_report_unsolved);
+        }
+
+        String dateFormat = "EEE, MMM dd";
+        String dateString = DateFormat.format(dateFormat, mCrime.getDate()).toString();
+        String suspect = mCrime.getSuspect();
+
+        if (suspect == null) {
+            suspect = getString(R.string.crime_report_no_suspect);
+        } else {
+            suspect = getString(R.string.crime_report_suspect, suspect);
+        }
+
+        String report = getString(R.string.crime_report,
+                mCrime.getTitle(), dateString, solvedString, suspect);
+
+        return report;
     }
 
     //Loading images in onStart() and unloading them in onStop() is a good practice. Page 338
@@ -297,9 +371,77 @@ public class CrimeFragment extends Fragment {
                 //Log.i(TAG, "Crime: " + mCrime.getTitle() + " has a photo");
 
             }
+        }else if (requestCode == REQUEST_CONTACT) {
+            contactUri = data.getData();
+            // Specify which fields you want your query to return
+            // values for.
+            String[] queryFields = new String[] {
+                    ContactsContract.Contacts.DISPLAY_NAME
+            };
+            // Perform your query - the contactUri is like a "where"
+            // clause here
+            Cursor c = getActivity().getContentResolver()
+                    .query(contactUri, queryFields, null, null, null);
+            // Double-check that you actually got results
+            if (c.getCount() == 0) {
+                c.close();
+                return;
+            }
+            // Pull out the first column of the first row of data -
+            // that is your suspect's name.
+            c.moveToFirst();
+            String suspect = c.getString(0);
+            mCrime.setSuspect(suspect);
+            mSuspectButton.setText(suspect);
+            c.close();
+
+            //Article https://gist.github.com/evandrix/7058235. Get contact details
+            retrieveContactNumber();
         }
 
     }
+
+    private void retrieveContactNumber() {
+        String contactNumber = null;
+        String contactID = "";
+
+        // getting contacts ID
+        Cursor cursorID = getActivity().getContentResolver().query(contactUri,
+                new String[]{ContactsContract.Contacts._ID},
+                null, null, null);
+
+        if (cursorID.moveToFirst()) {
+
+            contactID = cursorID.getString(cursorID.getColumnIndex(ContactsContract.Contacts._ID));
+            String testing = "";
+        }
+
+        cursorID.close();
+
+        Log.d(TAG, "Contact ID: " + contactID);
+
+        // Using the contact ID now we will get contact phone number
+        Cursor cursorPhone = getActivity().getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER},
+
+                ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ? AND " +
+                        ContactsContract.CommonDataKinds.Phone.TYPE + " = " +
+                        ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE,
+
+                new String[]{contactID},
+                null);
+
+        if (cursorPhone.moveToFirst()) {
+            contactNumber = cursorPhone.getString(cursorPhone.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+        }
+
+        cursorPhone.close();
+
+        phNumber = contactNumber;
+
+        Log.d(TAG, "Contact Phone Number: " + contactNumber);
+    }
+
 
     // 1*
 	@Override
